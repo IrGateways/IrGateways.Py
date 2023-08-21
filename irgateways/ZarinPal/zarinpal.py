@@ -5,7 +5,6 @@ from . import models
 class ZarinalClient:
 
     def __init__(self, merchant_id: str) -> None:
-
         """
             :param merchant_id:
         """
@@ -13,22 +12,8 @@ class ZarinalClient:
             raise ValueError("merchant_id parameter must be 36 character")
         self.merchant_id = merchant_id
 
-
-
     def create_url(self): ...
+
     def verify(self): ...
+
     def get_un_veryfid(self): ...
-
-
-
-
-
-
-
-
-
-
-
-
-
-
