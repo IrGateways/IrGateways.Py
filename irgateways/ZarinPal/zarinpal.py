@@ -8,7 +8,7 @@ class ZarinalClient:
         """
             :param merchant_id:
         """
-        if len(self.merchant_id) != 36:
+        if len(merchant_id) != 36:
             raise ValueError("merchant_id parameter must be 36 character")
         self.merchant_id = merchant_id
 
