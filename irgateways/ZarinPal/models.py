@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Union
+from typing import Union, List
 
 
 class CreateLinkRequestMetaData(BaseModel):
@@ -10,12 +10,14 @@ class CreateLinkRequestMetaData(BaseModel):
 class CreateLinkRequest(BaseModel):
     merchant_id: str
     amount: int
-    callback_url: str
+    currency: str
     description: Union[str, None] = None
+    callback_url: str
     metadata: Union[CreateLinkRequestMetaData, None] = None
+    order_id: Union[str, None] = None
 
 
-class CreateLinkresponseData(BaseModel):
+class CreateLinkResponseData(BaseModel):
     code: int
     message: str
     authority: str
@@ -47,3 +49,25 @@ class VerifyResponseData(BaseModel):
 class VerifyResponse(BaseModel):
     data: VerifyResponseData
     errors: list
+
+
+class UnVeryfidRequest:
+    ...
+
+
+class UnVeryfidResponseDataAuthorities:
+    authority: str
+    amount: int
+    callback_url: str
+    referer: str
+    date: str
+
+
+class UnVeryfidResponseData:
+    code: int
+    message: str
+    authorities: List[UnVeryfidResponseDataAuthorities]
+
+
+class UnVeryfidResponse:
+    data: UnVeryfidResponseData
