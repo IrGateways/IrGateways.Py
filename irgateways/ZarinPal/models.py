@@ -2,22 +2,22 @@ from pydantic import BaseModel
 from typing import Union, List
 
 
-class CreateLinkRequestMetaData(BaseModel):
+class CreateUrlRequestMetaData(BaseModel):
     mobile: str
     email: str
 
 
-class CreateLinkRequest(BaseModel):
+class CreateUrlRequest(BaseModel):
     merchant_id: str
     amount: int
     currency: str
     description: Union[str, None] = None
     callback_url: str
-    metadata: Union[CreateLinkRequestMetaData, None] = None
+    metadata: Union[CreateUrlRequestMetaData, None] = None
     order_id: Union[str, None] = None
 
 
-class CreateLinkResponseData(BaseModel):
+class CreateUrlResponseData(BaseModel):
     code: int
     message: str
     authority: str
@@ -25,7 +25,7 @@ class CreateLinkResponseData(BaseModel):
     fee: int
 
 
-class CreateLinkResponse(BaseModel):
+class CreateUrlResponse(BaseModel):
     data: str
     errors: list
 
@@ -52,7 +52,7 @@ class VerifyResponse(BaseModel):
 
 
 class UnVeryfidRequest:
-    ...
+    merchant_id: str
 
 
 class UnVeryfidResponseDataAuthorities:
