@@ -23,14 +23,6 @@ class ZarinalClient:
             raise ValueError("merchant_id parameter must be 36 character")
         self.__merchant_id = merchant_id
 
-    def __check_status_code(self, object: Any) -> bool:
-        """
-
-
-            :param object: this parameter must be in models.py and this have a code attribute
-            :return: if status code is 100: True else raise IrGatewaysError(code=status_code, message="string")
-        """
-
     def create_url(
             self,
             amount: int,
