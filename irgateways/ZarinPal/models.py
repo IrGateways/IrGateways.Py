@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Union, List
+from typing import Union, Optional, List, Any
 
 
 class CreateUrlRequestMetaData(BaseModel):
@@ -11,7 +11,7 @@ class CreateUrlRequest(BaseModel):
     merchant_id: str
     amount: int
     currency: str
-    description: Union[str, None] = None
+    description: Optional[str] = "created by IrGateWays.Py"
     callback_url: str
     metadata: Union[CreateUrlRequestMetaData, None] = None
     order_id: Union[str, None] = None
@@ -23,11 +23,28 @@ class CreateUrlResponseData(BaseModel):
     authority: str
     fee_type: str
     fee: int
+    redirect_url: Union[str, None] = None
+
+
+class ValidationsError(BaseModel):
+    merchant_id: Union[Any, None] = None
+    amount: Union[Any, None] = None
+    currency: Union[Any, None] = None
+    description: Union[Any, None] = None
+    callback_url: Union[Any, None] = None
+    metadata: Union[Any, None] = None
+    order_id: Union[Any, None] = None
+
+
+class Error(BaseModel):
+    code: int
+    message: str
+    validations: List[ValidationsError]
 
 
 class CreateUrlResponse(BaseModel):
-    data: str
-    errors: list
+    data: Union[CreateUrlResponseData, list]
+    errors: Union[Error, list]
 
 
 class VerifyRequest(BaseModel):
@@ -47,15 +64,15 @@ class VerifyResponseData(BaseModel):
 
 
 class VerifyResponse(BaseModel):
-    data: VerifyResponseData
-    errors: list
+    data: Union[VerifyResponseData, list]
+    errors: Union[Error, list]
 
 
-class UnVeryfidRequest:
+class UnVeryfidRequest(BaseModel):
     merchant_id: str
 
 
-class UnVeryfidResponseDataAuthorities:
+class UnVeryfidResponseDataAuthorities(BaseModel):
     authority: str
     amount: int
     callback_url: str
@@ -63,11 +80,18 @@ class UnVeryfidResponseDataAuthorities:
     date: str
 
 
-class UnVeryfidResponseData:
+class UnVeryfidResponseData(BaseModel):
     code: int
     message: str
     authorities: List[UnVeryfidResponseDataAuthorities]
 
 
 class UnVeryfidResponse:
-    data: UnVeryfidResponseData
+    data: Union[UnVeryfidResponseData, list]
+    error: Union[Error, list]
+
+
+class CheckResponseResult(BaseModel):
+    error_code: int
+    error_message: str
+    error_object: Any
