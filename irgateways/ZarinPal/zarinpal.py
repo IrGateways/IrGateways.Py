@@ -1,7 +1,7 @@
 from ..utils import check_status_code
 from requests import post, get
 from . import models
-from ..Exeptions import IrGatewaysError
+from .Exeptions import IrGatewaysError
 from enum import StrEnum, IntEnum, unique
 from typing import Optional, Union
 
