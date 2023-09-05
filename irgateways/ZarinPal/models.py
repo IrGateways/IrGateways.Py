@@ -89,9 +89,3 @@ class UnVeryfidResponseData(BaseModel):
 class UnVeryfidResponse:
     data: Union[UnVeryfidResponseData, list]
     error: Union[Error, list]
-
-
-class CheckResponseResult(BaseModel):
-    error_code: int
-    error_message: str
-    error_object: Any

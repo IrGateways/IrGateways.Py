@@ -1,8 +1,8 @@
 from ..utils import check_status_code
 from requests import post, get
 from . import models
-from .Exeptions import IrGatewaysError
-from enum import StrEnum, IntEnum, unique
+from .Exeptions import errors, Code
+from enum import StrEnum, unique
 from typing import Optional, Union
 
 
@@ -13,11 +13,6 @@ class Urls(StrEnum):
     VERIFY = f"{BASE}/verify"
     UN_VERYFID = f"{BASE}/un-verifid"
     REDIRECT = "https://www.zarinpal.com/pg/StartPay/"
-
-
-@unique
-class Cods(IntEnum):
-    SUCCESS = 100
 
 
 class ZarinalClient:
@@ -32,34 +27,23 @@ class ZarinalClient:
         self.__merchant_id = merchant_id
 
     @staticmethod
-    def __check_response_result(response: object) -> models.CheckResponseResult:
-        if response.data:
-            error_code, error_message, error_object = (
-                response.data.code,
-                response.data.message,
-                response.data
-            )
-        else:
-            error_code, error_message, error_object = (
-                response.errors.code,
-                response.errors.message,
-                response.errors
-            )
-        result = models.CheckResponseResult(
-            error_code=error_code,
-            error_message=error_message,
-            error_object=error_object
-        )
-        return result
+    def __check_response_result(response: object, response_data: object) -> object:
+
+        if check_status_code(response.status_code) and response_data.data and response_data.code in (Code.SUCCESS, Code.VERIDIED):
+            return response
+
+        error_code, error_message = response_data.errors.code, response_data.errors.message
+        error = errors(error_code)
+        raise error(code=error_code, message=error_message)
 
     def create_url(
-            self,
-            amount: int,
-            callback_url: str,
-            currency: Optional[str] = "IRT",
-            description: Optional[str] = "IrGateWays",
-            metadata: Union[dict, None] = None,
-            order_id: Union[str, None] = None
+        self,
+        amount: int,
+        callback_url: str,
+        currency: Optional[str] = "IRT",
+        description: Optional[str] = "IrGateWays",
+        metadata: Union[dict, None] = None,
+        order_id: Union[str, None] = None
     ) -> models.CreateUrlResponse:
         """
             This method for create url for pay money to your gateway
@@ -74,7 +58,8 @@ class ZarinalClient:
         """
 
         if not (isinstance(currency, str) and currency.upper() in ("IRR", "IRT")):
-            raise ValueError("currency must be string type and must be between 2 values of IRT and IRR")
+            raise ValueError(
+                "currency must be string type and must be between 2 values of IRT and IRR")
 
         try:
             data_for_send = models.CreateUrlRequest(
@@ -90,26 +75,18 @@ class ZarinalClient:
             response = post(url=Urls.CREATE_URL, json=data_for_send)
             response_data = models.CreateUrlResponse(**response.json())
 
-            if check_status_code(response.status_code) and response_data.data and response_data.code == Cods.SUCCESS:
-                response_data.data.redirect_url = Urls.REDIRECT + response_data.data.authority
-                return response
-
-            check_response_error = self.__check_response_result(response_data)
-
-            raise IrGatewaysError(
-                code=check_response_error.error_code,
-                message=check_response_error.error_message,
-                class_attributes=check_response_error.error_object
-            )
+            result = self.__check_response_result(response=response, response_data=response_data)
+            result.redirect_url = Urls.REDIRECT + result.authority
+            return result
 
         except Exception as error:
             raise error
 
     def verify(
-            self,
-            amount: int,
-            authority: str
-    ) -> models.VerifyResponse:
+        self,
+        amount: int,
+        authority: str
+    ) -> bool:
         """
             This method for verify pay to your gateway
 
@@ -126,16 +103,12 @@ class ZarinalClient:
             ).json()
             response = get(url=Urls.VERIFY, json=data_for_send)
             response_data = models.VerifyResponse(**response.json())
-            if check_status_code(response.status_code) and response_data.data and response_data.code == Cods.SUCCESS:
-                return response
+            
+            result = self.__check_response_result(response=response, response_data=response_data)
+            if result.data.code in (Code.SUCCESS, Code.VERIDIED):
+                return True
+            return False
 
-            check_response_error = self.__check_response_result(response_data)
-
-            raise IrGatewaysError(
-                code=check_response_error.error_code,
-                message=check_response_error.error_message,
-                class_attributes=check_response_error.error_object
-            )
         except Exception as error:
             raise error
 
@@ -149,21 +122,13 @@ class ZarinalClient:
         try:
             data_for_send = models.UnVeryfidRequest(
                 merchant_id=self.__merchant_id
-            )
+            ).json()
 
-            response = get(url=Urls.VERIFY, json=data_for_send)
-            response_data = models.VerifyResponse(**response.json())
-            
-            if check_status_code(response.status_code) and response_data.data and response_data.code == Cods.SUCCESS:
-                return response
+            response = post(url=Urls.VERIFY, json=data_for_send)
+            response_data = models.VerifyResponse(**response)
 
-            check_response_error = self.__check_response_result(response_data)
+            result = self.__check_response_result(response=response, response_data=response_data)
+            return response
 
-            raise IrGatewaysError(
-                code=check_response_error.error_code,
-                message=check_response_error.error_message,
-                class_attributes=check_response_error.error_object
-            )
-        
         except Exception as error:
             raise error
