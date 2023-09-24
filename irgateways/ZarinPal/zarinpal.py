@@ -1,18 +1,14 @@
-from ..utils import check_status_code
 from requests import post, get
-from . import models
-from .Exeptions import errors, Code
-from enum import StrEnum, unique
 from typing import Optional, Union
-
-
-@unique
-class Urls(StrEnum):
-    BASE = "https://api.zarinpal.com"
-    CREATE_URL = f"{BASE}/pg/v4/payment/request.json"
-    VERIFY = f"{BASE}/verify"
-    UN_VERYFID = f"{BASE}/un-verifid"
-    REDIRECT = "https://www.zarinpal.com/pg/StartPay/"
+from .models import (
+    CreateUrlRequest,
+    CreateUrlResponse,
+    VerifyRequest,
+    VerifyResponse,
+    UnVeryfidRequest,
+    UnVeryfidResponse
+)
+from ..exception import IrGateWaysError
 
 
 class ZarinalClient:
@@ -26,17 +22,7 @@ class ZarinalClient:
             raise ValueError("merchant_id parameter must be 36 character")
         self.__merchant_id = merchant_id
 
-    @staticmethod
-    def __check_response_result(response: object, response_data: object) -> object:
-
-        if check_status_code(response.status_code) and response_data.data and response_data.code in (Code.SUCCESS, Code.VERIDIED):
-            return response
-
-        error_code, error_message = response_data.errors.code, response_data.errors.message
-        error = errors(error_code)
-        raise error(code=error_code, message=error_message)
-
-    def create_url(
+    async def create(
         self,
         amount: int,
         callback_url: str,
@@ -44,7 +30,7 @@ class ZarinalClient:
         description: Optional[str] = "IrGateWays",
         metadata: Union[dict, None] = None,
         order_id: Union[str, None] = None
-    ) -> models.CreateUrlResponse:
+    ) -> CreateUrlResponse:
         """
             This method for create url for pay money to your gateway
 
@@ -57,12 +43,11 @@ class ZarinalClient:
             :return: CreateUrlResponse object or raise IrGateWaysError
         """
 
-        if not (isinstance(currency, str) and currency.upper() in ("IRR", "IRT")):
-            raise ValueError(
-                "currency must be string type and must be between 2 values of IRT and IRR")
+        CREATE_URL = "https://api.zarinpal.com/pg/v4/payment/request.json"
 
         try:
-            data_for_send = models.CreateUrlRequest(
+
+            data = CreateUrlRequest(
                 merchant_id=self.__merchant_id,
                 amount=amount,
                 callback_url=callback_url,
@@ -72,21 +57,17 @@ class ZarinalClient:
                 order_id=order_id
             ).json()
 
-            response = post(url=Urls.CREATE_URL, json=data_for_send)
-            response_data = models.CreateUrlResponse(**response.json())
+            result = post(url=CREATE_URL, json=data)
+            result = CreateUrlResponse(**result.json())
 
-            result = self.__check_response_result(response=response, response_data=response_data)
-            result.redirect_url = Urls.REDIRECT + result.authority
+            
+            result.redirect_url = f"https://www.zarinpal.com/pg/StartPay/{result.authority}"
             return result
 
         except Exception as error:
-            raise error
+            raise IrGateWaysError(900, str(error))
 
-    def verify(
-        self,
-        amount: int,
-        authority: str
-    ) -> bool:
+    async def verify(self, amount: int, authority: str) -> bool:
         """
             This method for verify pay to your gateway
 
@@ -95,40 +76,43 @@ class ZarinalClient:
             :return: VerifyResponse object or raise IrGateWaysError
         """
 
+        VERIFY_URL = "https://api.zarinpal.com/verify"
+
         try:
-            data_for_send = models.VerifyRequest(
+
+            data = VerifyRequest(
                 merchant_id=self.__merchant_id,
                 amount=amount,
                 authority=authority
             ).json()
-            response = get(url=Urls.VERIFY, json=data_for_send)
-            response_data = models.VerifyResponse(**response.json())
-            
-            result = self.__check_response_result(response=response, response_data=response_data)
-            if result.data.code in (Code.SUCCESS, Code.VERIDIED):
+
+            result = get(url=VERIFY_URL, json=data)
+            result = VerifyResponse(**result.json())
+
+            if result.data.code in (0, -1):  # TODO this
                 return True
             return False
 
         except Exception as error:
             raise error
 
-    def get_un_veryfid(self) -> models.UnVeryfidResponse:
+    async def get_un_veryfid(self) -> UnVeryfidResponse:
         """
             This method for get all un verifid pays from your gateway
 
             :return: UnVeryfidResponse object or raise IrGateWaysError
         """
 
+        UN_VERIFID_URL = "https://api.zarinpal.com/un-verifid"
+
         try:
-            data_for_send = models.UnVeryfidRequest(
-                merchant_id=self.__merchant_id
-            ).json()
 
-            response = post(url=Urls.VERIFY, json=data_for_send)
-            response_data = models.VerifyResponse(**response)
+            data = UnVeryfidRequest(merchant_id=self.__merchant_id).json()
 
-            result = self.__check_response_result(response=response, response_data=response_data)
-            return response
+            result = post(url=UN_VERIFID_URL, json=data)
+            result = VerifyResponse(**result)
+
+            return result
 
         except Exception as error:
             raise error

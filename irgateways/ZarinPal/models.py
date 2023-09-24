@@ -1,5 +1,16 @@
 from pydantic import BaseModel
 from typing import Union, Optional, List, Any
+from enum import StrEnum
+
+
+class Currency(StrEnum):
+    TOMAN = "IRT"
+    RIAL = "IRR"
+
+
+class FeeType(StrEnum):
+    PAYER = "Payer"
+    MERCHANT = "Merchant"
 
 
 class CreateUrlRequestMetaData(BaseModel):
