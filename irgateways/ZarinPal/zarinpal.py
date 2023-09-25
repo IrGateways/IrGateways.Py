@@ -6,7 +6,9 @@ from .models import (
     VerifyRequest,
     VerifyResponse,
     UnVeryfidRequest,
-    UnVeryfidResponse
+    UnVeryfidResponse,
+    Currency,
+    FeeType
 )
 from ..exception import IrGateWaysError
 
@@ -26,7 +28,7 @@ class ZarinalClient:
         self,
         amount: int,
         callback_url: str,
-        currency: Optional[str] = "IRT",
+        currency: Optional[Currency] = Currency.TOMAN,
         description: Optional[str] = "IrGateWays",
         metadata: Union[dict, None] = None,
         order_id: Union[str, None] = None

@@ -1,2 +1,2 @@
 from .nextpay import NextpayClient
-from .models import *
+from .models import Currency

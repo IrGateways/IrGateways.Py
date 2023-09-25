@@ -1,2 +1,2 @@
 from .zarinpal import ZarinalClient
-from .models import *
+from .models import Currency

@@ -8,11 +8,6 @@ class Currency(StrEnum):
     RIAL = "IRR"
 
 
-class FeeType(StrEnum):
-    PAYER = "Payer"
-    MERCHANT = "Merchant"
-
-
 class CreateUrlRequestMetaData(BaseModel):
     mobile: str
     email: str
@@ -21,7 +16,7 @@ class CreateUrlRequestMetaData(BaseModel):
 class CreateUrlRequest(BaseModel):
     merchant_id: str
     amount: int
-    currency: str
+    currency: Currency
     description: Optional[str] = "created by IrGateWays.Py"
     callback_url: str
     metadata: Union[CreateUrlRequestMetaData, None] = None
